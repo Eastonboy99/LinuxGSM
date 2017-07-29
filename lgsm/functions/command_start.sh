@@ -98,8 +98,17 @@ fn_start_tmux(){
 	# Create lockfile
 	date > "${rootdir}/${lockselfname}"
 	cd "${executabledir}"
-	tmux new-session -d -x "${sessionheight}" -y "${sessionwidth}" -s "${servicename}" "${executable} ${parms}" 2> "${lgsmlogdir}/.${servicename}-tmux-error.tmp"
-
+	# tmux new-session -d -x "${sessionheight}" -y "${sessionwidth}" -s "${servicename}" "${executable} ${parms}" 2> "${lgsmlogdir}/.${servicename}-tmux-error.tmp"
+	if [ "${engine}" == "source" ]||[ "${engine}" == "goldsource" ]; then
+		${executable} ${parms}
+	elif [ "${engine}" == "realvirtuality" ]; then
+		# Arma3 requires semicolons in the module list, which need to
+		# be escaped for regular (tmux) loading, but need to be
+		# stripped when loading straight from the console.
+		${executable} ${parms//\\;/;}
+	else
+		${executable} ${parms}
+	fi
 	# tmux pipe-pane not supported in tmux versions < 1.6
 	if [ "$(tmux -V|sed "s/tmux //"|sed -n '1 p'|tr -cd '[:digit:]')" -lt "16" ] 2>/dev/null; then # Tmux compiled from source will not return a number, therefore bypass this check and trash the error
 		echo "Console logging disabled: Tmux => 1.6 required
